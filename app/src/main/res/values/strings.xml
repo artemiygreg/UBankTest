@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">UBankTest</string>
+    <string name="show_list">Показать список</string>
+    <string name="show_dialog">Показать диалог</string>
+    <string name="smile">Smile</string>
+    <string name="dialog_message">Прошло 5 секунд</string>
+    <string name="close">Закрыть</string>
+</resources>
