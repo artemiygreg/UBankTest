@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.widget.ImageView;
 
 import java.util.List;
@@ -28,7 +29,7 @@ import butterknife.OnClick;
  * Created by artem_mobile_dev on 13.11.2017.
  */
 
-public class MainActivity extends AppCompatActivity implements MainView, CustomDialogFragment.OnCloseListener {
+public class MainActivity extends AppCompatActivity implements MainView{
 
     @BindView(R.id.image_view_icon)
     ImageView imageViewIcon;
@@ -38,7 +39,6 @@ public class MainActivity extends AppCompatActivity implements MainView, CustomD
 
     private MainPresenter presenter;
     private DataAdapter adapter;
-    private CustomDialogFragment dialogFragment;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -52,23 +52,19 @@ public class MainActivity extends AppCompatActivity implements MainView, CustomD
         if(presenter == null) {
             presenter = new MainPresenter(new MainDataModel());
         }
-        dialogFragment = (CustomDialogFragment)getSupportFragmentManager()
-                .findFragmentByTag(CustomDialogFragment.class.getName());
-        if(dialogFragment == null) {
-            dialogFragment = new CustomDialogFragment();
-            dialogFragment.setStyle(DialogFragment.STYLE_NO_FRAME, R.style.Dialog);
-        }
         presenter.bindView(this);
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        presenter.onSaveInstanceState(outState);
         super.onSaveInstanceState(outState);
-        if(!dialogFragment.isAdded()) {
-            getSupportFragmentManager().beginTransaction()
-                    .add(dialogFragment, CustomDialogFragment.class.getName())
-                    .commitAllowingStateLoss();
-        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        presenter.onRestoreInstanceState(savedInstanceState);
+        super.onRestoreInstanceState(savedInstanceState);
     }
 
     @Override
@@ -97,6 +93,8 @@ public class MainActivity extends AppCompatActivity implements MainView, CustomD
     @Override
     public void showDialog() {
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        CustomDialogFragment dialogFragment = new CustomDialogFragment();
+        dialogFragment.setStyle(DialogFragment.STYLE_NO_FRAME, R.style.Dialog);
         dialogFragment.show(ft, CustomDialogFragment.class.getName());
     }
 
@@ -116,17 +114,13 @@ public class MainActivity extends AppCompatActivity implements MainView, CustomD
 
     @Override
     public boolean dialogIsShowing() {
-        return dialogFragment != null && dialogFragment.isShowing();
-    }
-
-    @Override
-    public void close() {
-        dialogFragment.dismiss();
+        CustomDialogFragment fragment = (CustomDialogFragment) getSupportFragmentManager().findFragmentByTag(CustomDialogFragment.class.getName());
+        return fragment != null && fragment.isShowing();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        presenter.unbindView(this);
+        presenter.unbindViewAndUnsubscribe(this);
     }
 }

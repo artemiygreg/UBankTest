@@ -31,16 +31,10 @@ public class CustomDialogFragment extends DialogFragment {
 
     @OnClick(R.id.button_close)
     void onClickCloseDialog() {
-        if(getActivity() instanceof OnCloseListener) {
-            ((OnCloseListener)getActivity()).close();
-        }
+        dismiss();
     }
 
     public boolean isShowing() {
         return getDialog() != null && getDialog().isShowing();
-    }
-
-    public interface OnCloseListener {
-        void close();
     }
 }

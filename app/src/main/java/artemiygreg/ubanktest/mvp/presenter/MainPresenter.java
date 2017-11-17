@@ -1,5 +1,6 @@
 package artemiygreg.ubanktest.mvp.presenter;
 
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -20,10 +21,26 @@ import rx.schedulers.Schedulers;
  */
 
 public class MainPresenter extends BasePresenter<MainView> {
+    public static final int DEFAULT_DELAY = 5; // in second;
+    private long currentSecond;
+    private boolean showDialog = false;
     private MainDataModel mainDataModel;
 
     public MainPresenter(@NonNull MainDataModel mainDataModel) {
         this.mainDataModel = mainDataModel;
+    }
+
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putLong("current_second", currentSecond);
+        outState.putBoolean("show_dialog", showDialog);
+    }
+
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        currentSecond = savedInstanceState.getLong("current_second", 0);
+        showDialog = savedInstanceState.getBoolean("show_dialog", false);
+        if(showDialog) {
+            showDialog(currentSecond);
+        }
     }
 
     public void loadData() {
@@ -56,10 +73,15 @@ public class MainPresenter extends BasePresenter<MainView> {
     }
 
     public void showDialog() {
+        showDialog(DEFAULT_DELAY);
+    }
+
+    public void showDialog(long delay) {
         final MainView view = view();
         if(view != null) {
             if(!view.dialogIsShowing()) {
-                Subscription subscription = Observable.timer(5, TimeUnit.SECONDS)
+                showDialog = true;
+                Subscription subscription = Observable.timer(delay, TimeUnit.SECONDS)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(new Subscriber<Long>() {
@@ -77,9 +99,11 @@ public class MainPresenter extends BasePresenter<MainView> {
                             public void onNext(Long aLong) {
                                 if(!view.dialogIsShowing()) {
                                     view.showDialog();
+                                    showDialog = false;
                                 }
                             }
                         });
+
                 unsubscribeOnUnbindView(subscription);
             }
         }
