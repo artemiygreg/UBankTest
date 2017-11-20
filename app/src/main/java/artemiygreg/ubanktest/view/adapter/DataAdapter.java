@@ -7,7 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import artemiygreg.ubanktest.R;
 import artemiygreg.ubanktest.model.Data;
@@ -17,14 +17,14 @@ import artemiygreg.ubanktest.model.Data;
  */
 
 public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder> {
-    private List<Data> listData;
+    private ArrayList<Data> listData;
     private LayoutInflater mLayoutInflater;
 
     public DataAdapter(@NonNull LayoutInflater layoutInflater) {
         this.mLayoutInflater = layoutInflater;
     }
 
-    public void setData(List<Data> listData) {
+    public void setData(ArrayList<Data> listData) {
         this.listData = listData;
     }
 
@@ -42,6 +42,10 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.DataViewHolder
     @Override
     public void onBindViewHolder(DataAdapter.DataViewHolder holder, int position) {
         holder.bind(listData.get(position));
+    }
+
+    public ArrayList<Data> getData() {
+        return listData;
     }
 
     static class DataViewHolder extends RecyclerView.ViewHolder {

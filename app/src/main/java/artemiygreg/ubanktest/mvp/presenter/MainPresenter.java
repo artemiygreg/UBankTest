@@ -2,9 +2,10 @@ package artemiygreg.ubanktest.mvp.presenter;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
-import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import artemiygreg.ubanktest.model.Data;
@@ -16,14 +17,17 @@ import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
+import static artemiygreg.ubanktest.utils.Constants.DEFAULT_SECOND;
+import static artemiygreg.ubanktest.utils.Constants.DEFAULT_VALUE_PASSED_SECONDS;
+import static artemiygreg.ubanktest.utils.Constants.EXTRA_PASSES_SECONDS;
+import static artemiygreg.ubanktest.utils.Constants.EXTRA_LIST_DATA;
+
 /**
  * Created by artem_mobile_dev on 13.11.2017.
  */
 
 public class MainPresenter extends BasePresenter<MainView> {
-    public static final int DEFAULT_DELAY = 5; // in second;
-    private long currentSecond;
-    private boolean showDialog = false;
+    private int passedSeconds = DEFAULT_VALUE_PASSED_SECONDS;
     private MainDataModel mainDataModel;
 
     public MainPresenter(@NonNull MainDataModel mainDataModel) {
@@ -31,23 +35,31 @@ public class MainPresenter extends BasePresenter<MainView> {
     }
 
     public void onSaveInstanceState(Bundle outState) {
-        outState.putLong("current_second", currentSecond);
-        outState.putBoolean("show_dialog", showDialog);
+        outState.putInt(EXTRA_PASSES_SECONDS, passedSeconds);
+        final MainView view = view();
+        if(view != null) {
+            outState.putParcelableArrayList(EXTRA_LIST_DATA, view.getDataFromAdapter());
+        }
     }
 
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        currentSecond = savedInstanceState.getLong("current_second", 0);
-        showDialog = savedInstanceState.getBoolean("show_dialog", false);
-        if(showDialog) {
-            showDialog(currentSecond);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        if(savedInstanceState != null) {
+            passedSeconds = savedInstanceState.getInt(EXTRA_PASSES_SECONDS, DEFAULT_VALUE_PASSED_SECONDS);
+            ArrayList<Data> listData = savedInstanceState.getParcelableArrayList(EXTRA_LIST_DATA);
+            if (passedSeconds != DEFAULT_VALUE_PASSED_SECONDS) {
+                showDialog(DEFAULT_SECOND - passedSeconds); // show to after through remaining seconds
+            }
+            if(listData != null) {
+                showListData(listData);
+            }
         }
     }
 
     public void loadData() {
-        Subscription subscription = mainDataModel.loadDataAsObseravble()
+        Subscription subscription = mainDataModel.loadDataAsObservable()
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<List<Data>>() {
+                .subscribe(new Subscriber<ArrayList<Data>>() {
                     @Override
                     public void onCompleted() {
 
@@ -59,32 +71,39 @@ public class MainPresenter extends BasePresenter<MainView> {
                     }
 
                     @Override
-                    public void onNext(@NonNull List<Data> data) {
-                        if(!data.isEmpty()) {
-                            final MainView view = view();
-                            if(view != null) {
-                                view.hideImage();
-                                view.showList(data);
-                            }
-                        }
+                    public void onNext(ArrayList<Data> data) {
+                        showListData(data);
                     }
                 });
         unsubscribeOnUnbindView(subscription);
     }
 
-    public void showDialog() {
-        showDialog(DEFAULT_DELAY);
+    private void showListData(@Nullable ArrayList<Data> data) {
+        if(data != null && !data.isEmpty()) {
+            final MainView view = view();
+            if(view != null) {
+                view.hideImage();
+                view.showList(data);
+            }
+        }
     }
 
-    public void showDialog(long delay) {
+    public void showDialog() {
+        showDialog(DEFAULT_SECOND);
+    }
+
+    public void showDialog(int count) {
         final MainView view = view();
         if(view != null) {
             if(!view.dialogIsShowing()) {
-                showDialog = true;
-                Subscription subscription = Observable.timer(delay, TimeUnit.SECONDS)
+                Subscription subscription = Observable.interval(0, 1, TimeUnit.SECONDS)
+                        .take(count)
+                        .map(aLong -> aLong.intValue() + 1)
+                        .doOnNext(integer -> passedSeconds = integer)
+                        .last()
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new Subscriber<Long>() {
+                        .subscribe(new Subscriber<Integer>() {
                             @Override
                             public void onCompleted() {
 
@@ -96,10 +115,10 @@ public class MainPresenter extends BasePresenter<MainView> {
                             }
 
                             @Override
-                            public void onNext(Long aLong) {
+                            public void onNext(Integer result) {
                                 if(!view.dialogIsShowing()) {
                                     view.showDialog();
-                                    showDialog = false;
+                                    passedSeconds = DEFAULT_VALUE_PASSED_SECONDS; // reset for saving state
                                 }
                             }
                         });

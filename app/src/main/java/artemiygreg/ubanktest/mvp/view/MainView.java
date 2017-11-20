@@ -1,8 +1,9 @@
 package artemiygreg.ubanktest.mvp.view;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import artemiygreg.ubanktest.model.Data;
 
@@ -12,11 +13,14 @@ import artemiygreg.ubanktest.model.Data;
 
 public interface MainView {
 
-    void showList(@NonNull List<Data> data);
+    void showList(@NonNull ArrayList<Data> data);
 
     void showDialog();
 
     void hideImage();
+
+    @Nullable
+    ArrayList<Data> getDataFromAdapter();
 
     void showImage();
 

@@ -1,7 +1,7 @@
 package artemiygreg.ubanktest.mvp.model;
 
 
-import java.util.List;
+import java.util.ArrayList;
 
 import artemiygreg.ubanktest.model.Data;
 import artemiygreg.ubanktest.utils.DataHelper;
@@ -13,7 +13,7 @@ import rx.Observable;
 
 public class MainDataModel {
 
-    public Observable<List<Data>> loadDataAsObseravble() {
+    public Observable<ArrayList<Data>> loadDataAsObservable() {
         return Observable.create(subscriber -> {
             if(!subscriber.isUnsubscribed()) {
                 try {

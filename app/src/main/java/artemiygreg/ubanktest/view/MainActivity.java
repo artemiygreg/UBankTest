@@ -8,10 +8,9 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.widget.ImageView;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import artemiygreg.ubanktest.R;
 import artemiygreg.ubanktest.model.Data;
@@ -53,18 +52,13 @@ public class MainActivity extends AppCompatActivity implements MainView{
             presenter = new MainPresenter(new MainDataModel());
         }
         presenter.bindView(this);
+        presenter.onCreate(savedInstanceState);
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         presenter.onSaveInstanceState(outState);
         super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        presenter.onRestoreInstanceState(savedInstanceState);
-        super.onRestoreInstanceState(savedInstanceState);
     }
 
     @Override
@@ -83,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements MainView{
     }
 
     @Override
-    public void showList(@NonNull List<Data> data) {
+    public void showList(@NonNull ArrayList<Data> data) {
         adapter.setData(data);
         if(!ViewUtils.isVisible(recyclerViewData)) {
             ViewUtils.setVisible(recyclerViewData, true);
@@ -106,6 +100,11 @@ public class MainActivity extends AppCompatActivity implements MainView{
     }
 
     @Override
+    public ArrayList<Data> getDataFromAdapter() {
+        return adapter.getData();
+    }
+
+    @Override
     public void showImage() {
         if(!ViewUtils.isVisible(imageViewIcon)) {
             ViewUtils.setVisible(imageViewIcon, true);
@@ -114,7 +113,8 @@ public class MainActivity extends AppCompatActivity implements MainView{
 
     @Override
     public boolean dialogIsShowing() {
-        CustomDialogFragment fragment = (CustomDialogFragment) getSupportFragmentManager().findFragmentByTag(CustomDialogFragment.class.getName());
+        CustomDialogFragment fragment = (CustomDialogFragment) getSupportFragmentManager()
+                .findFragmentByTag(CustomDialogFragment.class.getName());
         return fragment != null && fragment.isShowing();
     }
 
