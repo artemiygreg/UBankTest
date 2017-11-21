@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import artemiygreg.ubanktest.model.Data;
 import artemiygreg.ubanktest.mvp.model.MainDataModel;
 import artemiygreg.ubanktest.mvp.view.MainView;
+import artemiygreg.ubanktest.mvp.view.MainViewState;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
@@ -19,8 +20,8 @@ import rx.schedulers.Schedulers;
 
 import static artemiygreg.ubanktest.utils.Constants.DEFAULT_SECOND;
 import static artemiygreg.ubanktest.utils.Constants.DEFAULT_VALUE_PASSED_SECONDS;
-import static artemiygreg.ubanktest.utils.Constants.EXTRA_PASSES_SECONDS;
 import static artemiygreg.ubanktest.utils.Constants.EXTRA_LIST_DATA;
+import static artemiygreg.ubanktest.utils.Constants.EXTRA_PASSES_SECONDS;
 
 /**
  * Created by artem_mobile_dev on 13.11.2017.
@@ -29,6 +30,7 @@ import static artemiygreg.ubanktest.utils.Constants.EXTRA_LIST_DATA;
 public class MainPresenter extends BasePresenter<MainView> {
     private int passedSeconds = DEFAULT_VALUE_PASSED_SECONDS;
     private MainDataModel mainDataModel;
+    private MainViewState state = MainViewState.TIMER_FINISHED;
 
     public MainPresenter(@NonNull MainDataModel mainDataModel) {
         this.mainDataModel = mainDataModel;
@@ -95,18 +97,19 @@ public class MainPresenter extends BasePresenter<MainView> {
     public void showDialog(int count) {
         final MainView view = view();
         if(view != null) {
-            if(!view.dialogIsShowing()) {
+            if(!view.dialogIsShowing() && state != MainViewState.TIMER_IN_PROGRESS) {
                 Subscription subscription = Observable.interval(0, 1, TimeUnit.SECONDS)
+                        .doOnSubscribe(() -> state = MainViewState.TIMER_IN_PROGRESS)
+                        .doOnUnsubscribe(() -> state = MainViewState.TIMER_FINISHED)
                         .take(count)
-                        .map(aLong -> aLong.intValue() + 1)
-                        .doOnNext(integer -> passedSeconds = integer)
+                        .doOnNext(integer -> passedSeconds++)
                         .last()
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new Subscriber<Integer>() {
+                        .subscribe(new Subscriber<Long>() {
                             @Override
                             public void onCompleted() {
-
+                                state = MainViewState.TIMER_FINISHED;
                             }
 
                             @Override
@@ -115,7 +118,7 @@ public class MainPresenter extends BasePresenter<MainView> {
                             }
 
                             @Override
-                            public void onNext(Integer result) {
+                            public void onNext(Long result) {
                                 if(!view.dialogIsShowing()) {
                                     view.showDialog();
                                     passedSeconds = DEFAULT_VALUE_PASSED_SECONDS; // reset for saving state

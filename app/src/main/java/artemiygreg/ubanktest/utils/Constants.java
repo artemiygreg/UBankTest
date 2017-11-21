@@ -9,5 +9,5 @@ public class Constants {
     public static final String EXTRA_LIST_DATA = "list_data";
 
     public static final int DEFAULT_SECOND = 5;
-    public static final int DEFAULT_VALUE_PASSED_SECONDS = -1;
+    public static final int DEFAULT_VALUE_PASSED_SECONDS = 0;
 }
